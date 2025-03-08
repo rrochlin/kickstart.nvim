@@ -22,7 +22,7 @@ return {
       local sources = {
         require('none-ls.formatting.ruff').with { extra_args = { '--extend-select', 'I' } },
         require 'none-ls.formatting.ruff_format',
-        null_ls.builtins.formatting.prettier.with { filetypes = { 'json', 'yaml', 'markdown' } },
+        null_ls.builtins.formatting.prettier.with { filetypes = { 'json', 'yaml' } },
         null_ls.builtins.formatting.shfmt.with { args = { '-i', '4' } },
       }
       local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
