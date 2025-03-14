@@ -24,6 +24,10 @@ return {
         require 'none-ls.formatting.ruff_format',
         null_ls.builtins.formatting.prettier.with { filetypes = { 'json', 'yaml' } },
         null_ls.builtins.formatting.shfmt.with { args = { '-i', '4' } },
+        null_ls.builtins.formatting.sqlformat.with {
+          filetypes = { 'sql', 'mysql', 'pgsql', 'sqlpp' },
+          extra_args = { '--reindent' },
+        },
       }
       local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
       null_ls.setup {
