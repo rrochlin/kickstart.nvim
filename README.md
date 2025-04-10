@@ -1,5 +1,12 @@
 # kickstart.nvim
 
+## Personal Notes
+
+### Setup on windows
+- Make sure to update everything in `:Mason` and `:Lazy`
+- For treesitter you will need a C compiler and to define the compiler in a system variable
+- for gcc create a system variable CC=gcc
+
 ## Introduction
 
 A starting point for Neovim that is:
