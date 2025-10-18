@@ -61,6 +61,13 @@ vim.o.splitbelow = true
 vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
+-- Indentation settings -- ADD THESE OR ADJUST EXISTING ONES
+vim.opt.expandtab = true -- Use spaces instead of tabs for indentation
+vim.opt.tabstop = 3 -- A tab character counts as 3 spaces
+vim.opt.shiftwidth = 3 -- Number of spaces to insert for each auto-indent step (e.g., when hitting Enter or `>>`)
+vim.opt.softtabstop = 3 -- Number of spaces a <Tab> in insert mode counts for
+-- END Indentation settings
+
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
 
@@ -415,7 +422,6 @@ require('lazy').setup({
       { 'mason-org/mason.nvim', opts = {} },
       'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
-      'nvim-java/nvim-java',
 
       -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
@@ -669,31 +675,30 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        clangd = {},
         gopls = {},
         -- pyright = {},
         rust_analyzer = {},
+        clangd = {
+          cmd = {
+            'clangd',
+            '--background-index',
+            '--clang-tidy',
+            '--header-insertion=iwyu',
+            '--completion-style=detailed',
+            '--function-arg-placeholders',
+            '--fallback-style=llvm',
+          },
+          init_options = {
+            usePlaceholders = true,
+            completeUnimported = true,
+            clangdFileStatus = true,
+          },
+        },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
         --
-        jdtls = {
-          settings = {
-            java = {
-              configuration = {
-                runtimes = {
-                  {
-                    name = 'Java 24',
-                    -- Set this to the path of the JDK installation
-                    path = vim.fn.getenv 'JAVA_HOME' or '/usr/bin/java',
-                    default = true,
-                  },
-                },
-              },
-            },
-          },
-        },
 
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         ts_ls = {},
@@ -745,7 +750,7 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       require('mason-tool-installer').setup {
-        ensure_installed = { 'stylua', 'markdownlint' },
+        ensure_installed = vim.list_extend({ 'stylua', 'markdownlint' }, ensure_installed),
       }
 
       require('mason-lspconfig').setup {
@@ -785,7 +790,7 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true, md = true }
+        local disable_filetypes = { c = true, md = true }
         local lsp_format_opt
         if disable_filetypes[vim.bo[bufnr].filetype] then
           return nil
@@ -974,7 +979,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'python', 'go', 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'python', 'go', 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'cpp' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {

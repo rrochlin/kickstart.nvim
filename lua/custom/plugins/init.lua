@@ -1,7 +1,4 @@
--- You can add your own plugins here or in other files in this directory!
---  I promise not to create any merge conflicts in this directory :)
---
--- See the kickstart.nvim README for more information
+-- lua/custom/plugins/init.lua
 return {
   {
     'nvimtools/none-ls.nvim',
@@ -15,10 +12,14 @@ return {
           'ruff',
           'prettier',
           'shfmt',
+          'clang-format', -- Keep this for formatting
+          -- REMOVED: 'cpplint' - clangd handles linting via clang-tidy
         },
         automatic_installation = true,
       }
+
       local null_ls = require 'null-ls'
+
       local sources = {
         require('none-ls.formatting.ruff').with { extra_args = { '--extend-select', 'I' } },
         require 'none-ls.formatting.ruff_format',
@@ -28,7 +29,17 @@ return {
           filetypes = { 'sql', 'mysql', 'pgsql', 'sqlpp' },
           extra_args = { '--reindent' },
         },
+
+        -- REMOVED: cpplint diagnostics - clangd provides better linting
+
+        -- C/C++ formatting with clang-format
+        null_ls.builtins.formatting.clang_format.with {
+          filetypes = { 'c', 'cpp', 'cc', 'cxx', 'h', 'hpp' },
+          -- Optional: specify style
+          -- extra_args = { '-style=Google' },
+        },
       }
+
       local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
       null_ls.setup {
         sources = sources,
