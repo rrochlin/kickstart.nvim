@@ -66,6 +66,8 @@ vim.opt.expandtab = true -- Use spaces instead of tabs for indentation
 vim.opt.tabstop = 3 -- A tab character counts as 3 spaces
 vim.opt.shiftwidth = 3 -- Number of spaces to insert for each auto-indent step (e.g., when hitting Enter or `>>`)
 vim.opt.softtabstop = 3 -- Number of spaces a <Tab> in insert mode counts for
+vim.opt.autoindent = true -- Copy indent from the current line on newline
+vim.opt.smartindent = true -- Improve newline indentation in C-style languages
 -- END Indentation settings
 
 -- Preview substitutions live, as you type!
@@ -134,6 +136,28 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.hl.on_yank()
   end,
 })
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'c', 'cpp' },
+  desc = 'Use built-in C indentation for C/C++ buffers',
+  callback = function()
+    vim.opt_local.cindent = true
+  end,
+})
+
+do
+  local treesitter_start = vim.treesitter.start
+
+  vim.treesitter.start = function(bufnr, lang)
+    bufnr = bufnr or 0
+
+    if vim.bo[bufnr].buftype == 'nofile' then
+      return
+    end
+
+    return treesitter_start(bufnr, lang)
+  end
+end
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -576,17 +600,17 @@ require('lazy').setup({
           --  the definition of its *type*, not where it was *defined*.
           map('grt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
 
-          -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
+          -- Check method support without using deprecated client APIs.
           ---@param client vim.lsp.Client
           ---@param method vim.lsp.protocol.Method
           ---@param bufnr? integer some lsp support methods only in specific files
           ---@return boolean
           local function client_supports_method(client, method, bufnr)
-            if vim.fn.has 'nvim-0.11' == 1 then
+            local ok, supported = pcall(function()
               return client:supports_method(method, bufnr)
-            else
-              return client.supports_method(method, { bufnr = bufnr })
-            end
+            end)
+
+            return ok and supported or false
           end
 
           -- The following two autocommands are used to highlight references of the
@@ -791,7 +815,6 @@ require('lazy').setup({
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
         local disable_filetypes = { c = true, md = true }
-        local lsp_format_opt
         if disable_filetypes[vim.bo[bufnr].filetype] then
           return nil
         else
@@ -808,6 +831,17 @@ require('lazy').setup({
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
+        javascript = { 'prettier' },
+        typescript = { 'prettier' },
+        javascriptreact = { 'prettier' },
+        typescriptreact = { 'prettier' },
+      },
+      formatters = {
+        prettier = {
+          -- This forces Prettier to use your 3-space preference
+          -- even if there is no .prettierrc file in the project.
+          prepend_args = { '--tab-width', '3' },
+        },
       },
     },
   },
@@ -984,12 +1018,15 @@ require('lazy').setup({
       auto_install = true,
       highlight = {
         enable = true,
+        disable = function(_, buf)
+          return vim.bo[buf].buftype == 'nofile'
+        end,
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { 'ruby' },
       },
-      indent = { enable = true, disable = { 'ruby' } },
+      indent = { enable = true, disable = { 'ruby', 'c', 'cpp' } },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
