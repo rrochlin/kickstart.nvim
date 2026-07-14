@@ -702,6 +702,7 @@ require('lazy').setup({
 
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         ts_ls = {},
+        luau_lsp = {},
         --
         pylsp = {
           settings = {
@@ -750,7 +751,7 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       require('mason-tool-installer').setup {
-        ensure_installed = vim.list_extend({ 'stylua', 'markdownlint' }, ensure_installed),
+        ensure_installed = vim.list_extend({ 'stylua', 'markdownlint', 'clang-format' }, ensure_installed),
       }
 
       require('mason-lspconfig').setup {
@@ -790,19 +791,21 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, md = true }
+        local disable_filetypes = { md = true }
         local lsp_format_opt
         if disable_filetypes[vim.bo[bufnr].filetype] then
           return nil
         else
           return {
-            timeout_ms = 500,
+            timeout_ms = 1000,
             lsp_format = 'fallback',
           }
         end
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        cpp = { 'clang-format' },
+        c = { 'clang-format' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --

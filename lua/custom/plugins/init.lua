@@ -12,7 +12,6 @@ return {
           'ruff',
           'prettier',
           'shfmt',
-          'clang-format', -- Keep this for formatting
           -- REMOVED: 'cpplint' - clangd handles linting via clang-tidy
         },
         automatic_installation = true,
@@ -31,30 +30,10 @@ return {
         },
 
         -- REMOVED: cpplint diagnostics - clangd provides better linting
-
-        -- C/C++ formatting with clang-format
-        null_ls.builtins.formatting.clang_format.with {
-          filetypes = { 'c', 'cpp', 'cc', 'cxx', 'h', 'hpp' },
-          -- Optional: specify style
-          -- extra_args = { '-style=Google' },
-        },
       }
 
-      local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
       null_ls.setup {
         sources = sources,
-        on_attach = function(client, bufnr)
-          if client.supports_method 'textDocument/formatting' then
-            vim.api.nvim_clear_autocmds { group = augroup, buffer = bufnr }
-            vim.api.nvim_create_autocmd('BufWritePre', {
-              group = augroup,
-              buffer = bufnr,
-              callback = function()
-                vim.lsp.buf.format { async = false }
-              end,
-            })
-          end
-        end,
       }
     end,
   },
